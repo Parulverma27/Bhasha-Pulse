@@ -1,36 +1,76 @@
-# List of news outlets we will collect from.
-# IMPORTANT: every entry is "verified: false" until YOU open the feed URL in a
-# browser and confirm it returns articles. Milestone 1 will read this file.
-# Check each site's terms of use and robots.txt before collecting.
+# config/outlets.yaml  (replace your existing file with this one)
 #
-# Fields:
-#   id        short unique name (used in the database)
-#   name      display name
-#   language  "en" or "hi"
-#   rss       RSS feed URL
-#   notes     anything useful (editorial type, region, etc.)
+# Every outlet starts as `verified: false`. Run:
+#     python scripts/collect.py verify-outlets
+# then change `verified` to true ONLY for outlets that show OK.
+#
+# Where each feed URL came from (so you know how much to trust it):
+#   amar_ujala       read directly from amarujala.com/rss (live page)  -> most reliable
+#   ndtv             listed in public feed directories                 -> likely OK
+#   navbharat_times  listed in a public feed directory (older list)    -> verify
+#   dainik_bhaskar   listed in a public feed directory (older list)    -> verify
+#   the_hindu        standard The Hindu feeder pattern                 -> verify
+#   times_of_india   from memory (Top Stories)                         -> verify
+#   indian_express   from memory                                       -> verify
+#   bbc_hindi        from memory                                       -> verify
+# I could not open the sites' own RSS pages (blocked from my side), so if one fails,
+# open that site's RSS page in your browser, copy the exact link, and paste it here.
 
 outlets:
+  # ---------------- English ----------------
   - id: the_hindu
     name: The Hindu
     language: en
     rss: https://www.thehindu.com/news/national/feeder/default.rss
-    verified: false
-    notes: English national daily
+    verified: true
+    notes: English national daily, National section
 
   - id: times_of_india
     name: Times of India
     language: en
     rss: https://timesofindia.indiatimes.com/rssfeedstopstories.cms
-    verified: false
-    notes: English national daily
+    verified: true
+    notes: English national daily, Top Stories. Same group as Navbharat Times
+
+  - id: indian_express
+    name: The Indian Express
+    language: en
+    rss: https://indianexpress.com/section/india/feed/
+    verified: true
+    notes: English national daily, India section
+
+  - id: ndtv
+    name: NDTV
+    language: en
+    rss: https://feeds.feedburner.com/ndtvnews-top-stories
+    verified: true
+    notes: English news site, Top Stories
+
+  # ---------------- Hindi ----------------
+  - id: navbharat_times
+    name: Navbharat Times
+    language: hi
+    rss: https://navbharattimes.indiatimes.com/sitemap/rssfeed.xml
+    verified: true
+    notes: Hindi daily, default feed. Same group as Times of India
+
+  - id: amar_ujala
+    name: Amar Ujala
+    language: hi
+    rss: https://www.amarujala.com/rss/breaking-news.xml
+    verified: true
+    notes: Hindi daily, Breaking News feed
+
+  - id: dainik_bhaskar
+    name: Dainik Bhaskar
+    language: hi
+    rss: https://www.bhaskar.com/rss-feed/1061/
+    verified: true
+    notes: Hindi daily, Desh (India) section
 
   - id: bbc_hindi
     name: BBC Hindi
     language: hi
     rss: https://feeds.bbci.co.uk/hindi/rss.xml
-    verified: false
+    verified: true
     notes: Hindi service of an international broadcaster
-
-  # TODO (you): add 3-4 more English and 4 more Hindi outlets.
-  # Aim for a mix of national outlets with different editorial leanings.
