@@ -1,0 +1,6 @@
+# Core (Milestone 0). Heavier ML libraries are added in later milestones
+# so setup stays fast and you understand why each one is needed.
+python-dotenv>=1.0
+pyyaml>=6.0
+fastapi>=0.110
+uvicorn[standard]>=0.29
