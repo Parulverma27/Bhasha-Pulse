@@ -1,0 +1,36 @@
+# List of news outlets we will collect from.
+# IMPORTANT: every entry is "verified: false" until YOU open the feed URL in a
+# browser and confirm it returns articles. Milestone 1 will read this file.
+# Check each site's terms of use and robots.txt before collecting.
+#
+# Fields:
+#   id        short unique name (used in the database)
+#   name      display name
+#   language  "en" or "hi"
+#   rss       RSS feed URL
+#   notes     anything useful (editorial type, region, etc.)
+
+outlets:
+  - id: the_hindu
+    name: The Hindu
+    language: en
+    rss: https://www.thehindu.com/news/national/feeder/default.rss
+    verified: false
+    notes: English national daily
+
+  - id: times_of_india
+    name: Times of India
+    language: en
+    rss: https://timesofindia.indiatimes.com/rssfeedstopstories.cms
+    verified: false
+    notes: English national daily
+
+  - id: bbc_hindi
+    name: BBC Hindi
+    language: hi
+    rss: https://feeds.bbci.co.uk/hindi/rss.xml
+    verified: false
+    notes: Hindi service of an international broadcaster
+
+  # TODO (you): add 3-4 more English and 4 more Hindi outlets.
+  # Aim for a mix of national outlets with different editorial leanings.
