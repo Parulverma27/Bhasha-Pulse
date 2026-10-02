@@ -5,7 +5,7 @@ articles, measures sentiment toward the article and toward individual entities
 (people, parties, companies), links Hindi and English coverage of the same event,
 and compares how different outlets frame it.
 
-> Status: **Milestone 0 complete (project setup).** See the roadmap below.
+> Status: **Milestone 1 complete (data collection pipeline).** See the roadmap below.
 
 ## Research questions
 1. Do multilingual transformers fine-tuned on news beat models trained on reviews or tweets?
@@ -60,14 +60,19 @@ cp .env.example .env.local
 npm install
 npm run dev
 #    open http://localhost:3000
+
+# 6. Initialise and run the data collection pipeline (Milestone 1)
+python scripts/collect.py init-db    # create the database
+python scripts/collect.py verify-outlets
+python scripts/collect.py rss
 ```
 
 ## Roadmap
 | Milestone | Topic | Status |
 |---|---|---|
 | 0 | Project setup | done |
-| 1 | Data collection pipeline | next |
-| 2 | Preprocessing and annotation | |
+| 1 | Data collection pipeline | done |
+| 2 | Preprocessing and annotation | next |
 | 3 | Sentiment models | |
 | 4 | NER and entity-level sentiment | |
 | 5 | Cross-lingual event linking | |
