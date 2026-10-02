@@ -1,0 +1,16 @@
+# Keywords sent to GDELT (combined with sourcecountry:IN and the language filter).
+# Broad topics give broad coverage. Edit freely; every keyword = one request
+# (and the collector waits ~6 s between requests).
+queries:
+  en:
+    - India
+    - Parliament
+    - Economy
+    - Election
+    - Supreme Court
+  hi:
+    - भारत
+    - संसद
+    - अर्थव्यवस्था
+    - चुनाव
+    - सुप्रीम कोर्ट

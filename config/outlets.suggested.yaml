@@ -1,0 +1,37 @@
+# Extra candidates to copy into config/outlets.yaml AFTER you verify them.
+# These URLs are from memory and may be wrong or outdated. Run:
+#     python scripts/collect.py verify-outlets
+# Hindi outlets are left for you to find (the project's unique part is Hindi coverage):
+#     python scripts/collect.py discover-feed https://<hindi-outlet-homepage>
+# Candidate Hindi outlets to look up: NDTV India, Aaj Tak, Dainik Bhaskar, Amar Ujala,
+# Dainik Jagran, Navbharat Times, Live Hindustan, Jansatta, Hindustan Times Hindi.
+# Aim for >= 4 English and >= 4 Hindi outlets with different editorial leanings.
+
+outlets:
+  - id: indian_express
+    name: The Indian Express
+    language: en
+    rss: https://indianexpress.com/section/india/feed/
+    verified: false
+    notes: English national daily
+
+  - id: hindustan_times
+    name: Hindustan Times
+    language: en
+    rss: https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml
+    verified: false
+    notes: English national daily
+
+  - id: ndtv
+    name: NDTV
+    language: en
+    rss: https://feeds.feedburner.com/ndtvnews-top-stories
+    verified: false
+    notes: English news channel/website
+
+  # - id: <hindi_outlet_id>
+  #   name: <Hindi Outlet>
+  #   language: hi
+  #   rss: <url from discover-feed>
+  #   verified: false
+  #   notes: Hindi daily

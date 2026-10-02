@@ -23,7 +23,7 @@ check("Python >= 3.10", sys.version_info >= (3, 10), "Install Python 3.10 or new
 check("git installed", shutil.which("git") is not None, "Install Git")
 check("node installed (needed for frontend)", shutil.which("node") is not None, "Install Node.js LTS")
 
-for pkg in ("yaml", "dotenv", "fastapi", "uvicorn"):
+for pkg in ("yaml", "dotenv", "fastapi", "uvicorn", "requests", "feedparser", "trafilatura"):
     try:
         importlib.import_module(pkg)
         check(f"python package '{pkg}'", True)
