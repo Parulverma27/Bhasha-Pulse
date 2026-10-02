@@ -57,8 +57,12 @@ def parse_response(data: dict) -> list[Article]:
     return articles
 
 
+RETRY_DELAYS = (30, 60, 120)
+
+
 def fetch(keyword: str, language: str, session: PoliteSession,
-          timespan: str = "1d", max_records: int = 100) -> list[Article]:
+          timespan: str = "1d", max_records: int = 100,
+          sleep_fn=time.sleep) -> list[Article]:
     params = {
         "query": build_query(keyword, language),
         "mode": "artlist",
@@ -67,8 +71,25 @@ def fetch(keyword: str, language: str, session: PoliteSession,
         "timespan": timespan,
         "sort": "datedesc",
     }
-    resp = session.get(GDELT_DOC_API, params=params)
-    resp.raise_for_status()
+    for delay in RETRY_DELAYS:
+        resp = session.get(GDELT_DOC_API, params=params)
+        if resp.status_code == 429:
+            sleep_fn(delay)
+            continue
+        break
+    else:
+        resp = session.get(GDELT_DOC_API, params=params)
+        if resp.status_code == 429:
+            if hasattr(resp, "raise_for_status"):
+                resp.raise_for_status()
+            raise RuntimeError(f"GDELT rate limit (429) for keyword '{keyword}' after retries")
+
+    if hasattr(resp, "raise_for_status"):
+        resp.raise_for_status()
+
+    if "too short" in (resp.text or "").lower():
+        raise ValueError(f"GDELT query '{keyword}' is too short")
+
     try:
         return parse_response(resp.json())
     except ValueError as exc:  # GDELT sometimes returns plain-text errors
@@ -76,12 +97,12 @@ def fetch(keyword: str, language: str, session: PoliteSession,
 
 
 def collect(conn: sqlite3.Connection, session: PoliteSession, timespan: str = "1d",
-            max_records: int = 100) -> None:
+            max_records: int = 100, sleep_fn=time.sleep) -> None:
     seen = new = errors = 0
     for language, keywords in load_queries().items():
         for kw in keywords:
             try:
-                arts = fetch(kw, language, session, timespan, max_records)
+                arts = fetch(kw, language, session, timespan, max_records, sleep_fn=sleep_fn)
                 seen += len(arts)
                 new += sum(db.insert_article(conn, a) for a in arts)
                 conn.commit()
@@ -89,6 +110,6 @@ def collect(conn: sqlite3.Connection, session: PoliteSession, timespan: str = "1
             except Exception as exc:  # noqa: BLE001
                 errors += 1
                 log.warning("gdelt [%s] %r failed: %s", language, kw, exc)
-            time.sleep(GDELT_MIN_INTERVAL)
+            sleep_fn(GDELT_MIN_INTERVAL)
     db.log_run(conn, "gdelt", seen, new, errors)
     conn.commit()

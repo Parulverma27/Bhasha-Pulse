@@ -120,6 +120,66 @@ class ParserTests(unittest.TestCase):
     def test_gdelt_query_building(self):
         self.assertEqual(gdelt.build_query("India", "en"), '"India" sourcecountry:IN sourcelang:english')
 
+    def test_gdelt_429_retry_then_success(self):
+        class MockResp:
+            def __init__(self, status_code, data=None):
+                self.status_code = status_code
+                self._data = data or {}
+                self.text = ""
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return self._data
+
+        calls = [
+            MockResp(429),
+            MockResp(200, {"articles": [{"url": "https://a.in/1", "title": "T", "domain": "a.in", "language": "English", "seendate": "20261001T080000Z"}]}),
+        ]
+
+        class MockSession:
+            def get(self, url, params=None):
+                return calls.pop(0)
+
+        slept = []
+        arts = gdelt.fetch("India", "en", MockSession(), sleep_fn=slept.append)
+        self.assertEqual(len(arts), 1)
+        self.assertEqual(slept, [30])
+
+    def test_gdelt_429_four_times_raises(self):
+        class MockResp:
+            status_code = 429
+            text = "Too Many Requests"
+
+            def raise_for_status(self):
+                raise RuntimeError("429 error")
+
+        class MockSession:
+            def get(self, url, params=None):
+                return MockResp()
+
+        slept = []
+        with self.assertRaises(RuntimeError):
+            gdelt.fetch("India", "en", MockSession(), sleep_fn=slept.append)
+        self.assertEqual(slept, [30, 60, 120])
+
+    def test_gdelt_too_short_raises_value_error(self):
+        class MockResp:
+            status_code = 200
+            text = "The specified phrase is too short.\n"
+
+            def raise_for_status(self):
+                pass
+
+        class MockSession:
+            def get(self, url, params=None):
+                return MockResp()
+
+        with self.assertRaises(ValueError) as ctx:
+            gdelt.fetch("भारत", "hi", MockSession(), sleep_fn=lambda _: None)
+        self.assertIn("भारत", str(ctx.exception))
+
     def test_gnews_response_parsed(self):
         data = {"articles": [{"url": "https://s.com/a", "title": "T", "description": "<i>d</i>",
                               "publishedAt": "2026-10-01T10:00:00Z",
