@@ -79,6 +79,16 @@ class DbTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             db.db_path_from_url("postgresql://x")
 
+    def test_fair_queue_spreads_outlets(self):
+        from collections import Counter
+        for o in ["out1", "out2", "out3"]:
+            for i in range(5):
+                db.insert_article(self.conn, Article("rss", o, "en", f"https://{o}.com/{i}", f"Title {i}"))
+        rows = db.pending_fulltext(self.conn, limit=6)
+        self.assertEqual(len(rows), 6)
+        counts = Counter(r["outlet_id"] for r in rows)
+        self.assertEqual(counts, {"out1": 2, "out2": 2, "out3": 2})
+
 
 class ParserTests(unittest.TestCase):
     outlet = Outlet(id="test", name="Test", language="hi", rss="http://x")

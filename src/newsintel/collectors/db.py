@@ -90,12 +90,18 @@ def insert_article(conn: sqlite3.Connection, a: Article) -> bool:
 
 def pending_fulltext(conn: sqlite3.Connection, limit: int,
                      language: str | None = None) -> list[sqlite3.Row]:
-    sql = "SELECT id, url, outlet_id FROM articles WHERE text_status = 'pending'"
+    where = "WHERE text_status = 'pending'"
     params: list = []
     if language:
-        sql += " AND language = ?"
+        where += " AND language = ?"
         params.append(language)
-    sql += " ORDER BY id LIMIT ?"
+    sql = f"""WITH ranked AS (
+        SELECT id, url, outlet_id,
+               ROW_NUMBER() OVER (PARTITION BY outlet_id ORDER BY id DESC) as rn
+        FROM articles
+        {where}
+    )
+    SELECT id, url, outlet_id FROM ranked ORDER BY rn, outlet_id LIMIT ?"""
     params.append(limit)
     return conn.execute(sql, params).fetchall()
 
