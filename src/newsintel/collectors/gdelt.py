@@ -17,6 +17,7 @@ import yaml
 from newsintel.config import CONFIG_DIR
 
 from . import db
+from .filters import is_blocked, load_blocked_domains
 from .http import PoliteSession
 from .models import Article
 from .utils import normalize_url, parse_datetime
@@ -98,12 +99,14 @@ def fetch(keyword: str, language: str, session: PoliteSession,
 
 def collect(conn: sqlite3.Connection, session: PoliteSession, timespan: str = "1d",
             max_records: int = 100, sleep_fn=time.sleep) -> None:
+    blocked = load_blocked_domains()
     seen = new = errors = 0
     for language, keywords in load_queries().items():
         for kw in keywords:
             try:
                 arts = fetch(kw, language, session, timespan, max_records, sleep_fn=sleep_fn)
                 seen += len(arts)
+                arts = [a for a in arts if not is_blocked(a.url, blocked)]
                 new += sum(db.insert_article(conn, a) for a in arts)
                 conn.commit()
                 log.info("gdelt [%s] %r: %d seen", language, kw, len(arts))

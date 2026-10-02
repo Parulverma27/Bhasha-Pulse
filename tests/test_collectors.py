@@ -89,6 +89,37 @@ class DbTests(unittest.TestCase):
         counts = Counter(r["outlet_id"] for r in rows)
         self.assertEqual(counts, {"out1": 2, "out2": 2, "out3": 2})
 
+    def test_is_blocked(self):
+        from newsintel.collectors.filters import is_blocked
+        blocked = ["indiankanoon.org", "prokerala.com"]
+        self.assertTrue(is_blocked("https://indiankanoon.org/doc/123", blocked))
+        self.assertTrue(is_blocked("https://sub.indiankanoon.org/doc/123", blocked))
+        self.assertTrue(is_blocked("http://prokerala.com/", blocked))
+        self.assertFalse(is_blocked("https://notindiankanoon.org/doc/123", blocked))
+        self.assertFalse(is_blocked("https://thehindu.com/news", blocked))
+        self.assertFalse(is_blocked("https://indiankanoon.org.fake.com/", blocked))
+
+    def test_purge_blocked_logic(self):
+        blocked = ["indiankanoon.org"]
+        db.insert_article(self.conn, Article("rss", "indiankanoon.org", "en", "https://indiankanoon.org/rss/1", "Title 1"))
+        db.insert_article(self.conn, Article("gdelt", "indiankanoon.org", "en", "https://indiankanoon.org/gdelt/2", "Title 2"))
+        db.insert_article(self.conn, Article("gnews", "indiankanoon.org", "en", "https://indiankanoon.org/gnews/3", "Title 3"))
+        row = self.conn.execute("SELECT id FROM articles WHERE url = 'https://indiankanoon.org/gnews/3'").fetchone()
+        db.save_fulltext(self.conn, row["id"], "Some full text", "ok")
+        db.insert_article(self.conn, Article("gdelt", "thehindu.com", "en", "https://thehindu.com/article/4", "Title 4"))
+
+        dry_count = db.purge_blocked_articles(self.conn, blocked, apply=False)
+        self.assertEqual(dry_count, 1)
+        remaining = self.conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
+        self.assertEqual(remaining, 4)
+
+        applied_count = db.purge_blocked_articles(self.conn, blocked, apply=True)
+        self.assertEqual(applied_count, 1)
+        remaining = self.conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
+        self.assertEqual(remaining, 3)
+        purged = self.conn.execute("SELECT id FROM articles WHERE url = 'https://indiankanoon.org/gdelt/2'").fetchone()
+        self.assertIsNone(purged)
+
 
 class ParserTests(unittest.TestCase):
     outlet = Outlet(id="test", name="Test", language="hi", rss="http://x")

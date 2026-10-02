@@ -13,6 +13,7 @@ import time
 from urllib.parse import urlsplit
 
 from . import db
+from .filters import is_blocked, load_blocked_domains
 from .http import PoliteSession
 from .models import Article
 from .utils import clean_html, normalize_url, parse_datetime
@@ -48,6 +49,7 @@ def collect(conn: sqlite3.Connection, session: PoliteSession,
     key = os.getenv("GNEWS_API_KEY", "")
     if not key:
         raise RuntimeError("GNEWS_API_KEY is empty. Add it to your .env file.")
+    blocked = load_blocked_domains()
     seen = new = errors = 0
     for language, queries in (topics or DEFAULT_TOPICS).items():
         for q in queries:
@@ -59,6 +61,7 @@ def collect(conn: sqlite3.Connection, session: PoliteSession,
                 resp.raise_for_status()
                 arts = parse_response(resp.json(), language)
                 seen += len(arts)
+                arts = [a for a in arts if not is_blocked(a.url, blocked)]
                 new += sum(db.insert_article(conn, a) for a in arts)
                 conn.commit()
                 log.info("gnews [%s] %r: %d seen", language, q, len(arts))

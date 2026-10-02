@@ -150,3 +150,17 @@ def stats(conn: sqlite3.Connection) -> dict:
         "date_range": tuple(conn.execute(
             "SELECT MIN(published_at), MAX(published_at) FROM articles").fetchone()),
     }
+
+
+def purge_blocked_articles(conn: sqlite3.Connection, blocked: set[str] | list[str],
+                           apply: bool = False) -> int:
+    from .filters import is_blocked
+    rows = conn.execute(
+        "SELECT id, url FROM articles WHERE source_type IN ('gdelt', 'gnews') "
+        "AND text_status = 'pending'"
+    ).fetchall()
+    to_delete = [r["id"] for r in rows if is_blocked(r["url"], blocked)]
+    if apply and to_delete:
+        conn.executemany("DELETE FROM articles WHERE id = ?", [(i,) for i in to_delete])
+        conn.commit()
+    return len(to_delete)

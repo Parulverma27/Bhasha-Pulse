@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from newsintel.collectors import db, fulltext, gdelt, gnews, rss
+from newsintel.collectors import db, filters, fulltext, gdelt, gnews, rss
 from newsintel.collectors.http import PoliteSession
 from newsintel.config import get_settings
 from newsintel.logging_setup import setup_logging
@@ -112,6 +112,17 @@ def cmd_stats(args) -> None:
         print(f"  {outlet:<28}{lang:<8}{n}")
 
 
+def cmd_purge_blocked(args) -> None:
+    blocked = filters.load_blocked_domains()
+    with db.connect() as conn:
+        db.init_db(conn)
+        count = db.purge_blocked_articles(conn, blocked, apply=args.apply)
+    if args.apply:
+        print(f"Purged {count} blocked rows.")
+    else:
+        print(f"Dry run: {count} blocked rows would be deleted (run with --apply to delete).")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -125,6 +136,9 @@ def main() -> None:
     p = sub.add_parser("fulltext"); p.add_argument("--limit", type=int, default=100); p.add_argument("--language", choices=["en", "hi"]); p.set_defaults(func=cmd_fulltext)
     p = sub.add_parser("run-all"); p.add_argument("--include-unverified", action="store_true"); p.add_argument("--skip-gdelt", action="store_true"); p.add_argument("--fulltext-limit", type=int, default=200); p.set_defaults(func=cmd_run_all)
     sub.add_parser("stats").set_defaults(func=cmd_stats)
+    p = sub.add_parser("purge-blocked")
+    p.add_argument("--apply", action="store_true", help="Apply deletion of blocked articles")
+    p.set_defaults(func=cmd_purge_blocked)
 
     args = parser.parse_args()
     setup_logging(get_settings().log_level)

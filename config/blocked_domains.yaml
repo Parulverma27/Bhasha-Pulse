@@ -1,0 +1,5 @@
+# Domains to ignore from aggregators (legal databases, horoscopes, aggregators, etc.)
+domains:
+  - indiankanoon.org
+  - prokerala.com
+  - readersdigest.in
