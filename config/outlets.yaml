@@ -43,7 +43,7 @@ outlets:
     name: NDTV
     language: en
     rss: https://feeds.feedburner.com/ndtvnews-top-stories
-    verified: true
+    verified: false
     notes: English news site, Top Stories
 
   # ---------------- Hindi ----------------
